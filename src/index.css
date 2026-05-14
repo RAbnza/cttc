@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  @apply bg-ink-50 text-ink-700 font-sans antialiased;
+  margin: 0;
+  min-height: 100vh;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.app-shell {
+  background: radial-gradient(circle at top left, rgba(103, 203, 180, 0.25), transparent 45%),
+    radial-gradient(circle at 20% 20%, rgba(178, 215, 255, 0.35), transparent 35%),
+    linear-gradient(140deg, #f4f6f8 0%, #f9fbfc 45%, #edf3f4 100%);
+}
+
+.glass-panel {
+  @apply bg-white/70 backdrop-blur-xl border border-white/60 shadow-glass;
+}
+
+.soft-scroll {
+  scrollbar-color: rgba(148, 163, 184, 0.5) transparent;
+  scrollbar-width: thin;
+}
