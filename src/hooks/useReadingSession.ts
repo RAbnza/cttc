@@ -18,13 +18,51 @@ import { useWebGazer } from "./useWebGazer";
 
 const SESSION_KEY = "cttc-reading-session";
 
-const CALIBRATION_TARGETS: CalibrationTarget[] = [
-  { x: 0.5, y: 0.5 },
-  { x: 0.18, y: 0.2 },
-  { x: 0.82, y: 0.2 },
-  { x: 0.18, y: 0.78 },
-  { x: 0.82, y: 0.78 }
+/** 5×5 grid with inset margins; order: corners → remaining edges → inner ring → center. */
+const CALIBRATION_GRID = 5;
+const CALIBRATION_MARGIN = 0.08;
+
+const gridCellToTarget = (row: number, col: number): CalibrationTarget => {
+  const span = 1 - 2 * CALIBRATION_MARGIN;
+  const step = span / (CALIBRATION_GRID - 1);
+  return {
+    x: CALIBRATION_MARGIN + col * step,
+    y: CALIBRATION_MARGIN + row * step
+  };
+};
+
+/** Row/col indices on the 5×5 grid (0 = top/left). */
+const CALIBRATION_CELL_ORDER: Array<[number, number]> = [
+  [0, 0],
+  [0, 4],
+  [4, 4],
+  [4, 0],
+  [0, 1],
+  [0, 2],
+  [0, 3],
+  [1, 4],
+  [2, 4],
+  [3, 4],
+  [4, 3],
+  [4, 2],
+  [4, 1],
+  [3, 0],
+  [2, 0],
+  [1, 0],
+  [1, 1],
+  [1, 2],
+  [1, 3],
+  [2, 3],
+  [3, 3],
+  [3, 2],
+  [3, 1],
+  [2, 1],
+  [2, 2]
 ];
+
+const CALIBRATION_TARGETS: CalibrationTarget[] = CALIBRATION_CELL_ORDER.map(
+  ([row, col]) => gridCellToTarget(row, col)
+);
 
 const buildCalibrationState = () => ({
   currentIndex: 0,

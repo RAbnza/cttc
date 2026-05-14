@@ -46,10 +46,10 @@ export const StoryText = ({ lines, currentWord, onLayout }: StoryTextProps) => {
   }, [onLayout, wordItems]);
 
   return (
-    <div className="space-y-4 text-[15px] leading-7 text-ink-700">
+    <div className="space-y-5 text-xl leading-[2.35rem] text-ink-700 md:text-2xl md:leading-[2.65rem]">
       {wordItems.map((lineWords, lineIndex) => {
         return (
-          <p key={lineIndex} className="flex flex-wrap gap-2">
+          <p key={lineIndex} className="flex flex-wrap gap-x-2 gap-y-2 md:gap-x-2.5 md:gap-y-2.5">
             {lineWords.map((word) => {
               const isActive =
                 currentWord?.lineIndex === lineIndex &&
@@ -59,7 +59,7 @@ export const StoryText = ({ lines, currentWord, onLayout }: StoryTextProps) => {
                 <motion.span
                   key={`${lineIndex}-${word.wordIndex}`}
                   className={cn(
-                    "rounded-full px-2 py-1 transition",
+                    "rounded-full px-3 py-1.5 transition md:px-3.5 md:py-2",
                     isActive
                       ? "bg-ink-900 text-white shadow-soft"
                       : "hover:bg-white/80"

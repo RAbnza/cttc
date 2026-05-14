@@ -69,15 +69,26 @@ export const ReaderPanel = ({
         </div>
       </CardHeader>
       <CardContent>
-        <div className="mb-6 flex items-center gap-3 rounded-xl border border-ink-100 bg-white/80 px-4 py-3 text-sm text-ink-600">
-          <Eye size={18} className="text-ink-500" />
-          Current word: <span className="font-semibold text-ink-900">{session.currentWord?.term || "--"}</span>
+        <div className="mb-6 flex items-center gap-3 rounded-xl border border-ink-100 bg-white/80 px-4 py-3 text-base text-ink-600">
+          <Eye size={20} className="shrink-0 text-ink-500" />
+          Current word:{" "}
+          <span className="font-semibold text-ink-900">
+            {session.currentWord?.term || "--"}
+          </span>
         </div>
-        <StoryText
-          lines={lines}
-          currentWord={session.currentWord}
-          onLayout={onWordLayout}
-        />
+        <div
+          className="overflow-y-auto overscroll-y-contain rounded-2xl border border-ink-100 bg-white/90 px-3 py-5 shadow-inner sm:px-5 [--story-line:2.35rem] md:[--story-line:2.65rem]"
+          style={{
+            maxHeight:
+              "min(65vh, calc(5 * var(--story-line) + 4 * 1.1rem + 2.25rem))"
+          }}
+        >
+          <StoryText
+            lines={lines}
+            currentWord={session.currentWord}
+            onLayout={onWordLayout}
+          />
+        </div>
       </CardContent>
     </Card>
   );
