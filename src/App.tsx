@@ -64,7 +64,7 @@ const Dashboard = () => {
                 <LatestSessionWordList session={fixationSource} />
                 <LatestSessionRereadList session={fixationSource} />
               </div>
-              <VocabPanel entries={vocabEntries} />
+              <VocabPanel entries={vocabEntries} session={fixationSource} />
             </div>
 
             <div className="flex flex-col gap-5">
