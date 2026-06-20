@@ -97,8 +97,11 @@ export const useWebGazer = ({ enabled }: WebGazerOptions) => {
       window.webgazer.showFaceOverlay?.(true);
       window.webgazer.showFaceFeedbackBox?.(false);
 
-      // This WebGazer build supports only TFFacemesh as tracker.
-      window.webgazer.params.faceMeshSolutionPath = "/mediapipe/face_mesh";
+      // Resolve MediaPipe assets against the current app origin explicitly.
+      window.webgazer.params.faceMeshSolutionPath = new URL(
+        "/mediapipe/face_mesh",
+        window.location.origin
+      ).toString();
       window.webgazer.setTracker?.("TFFacemesh");
       window.webgazer.setRegression?.("ridge");
 

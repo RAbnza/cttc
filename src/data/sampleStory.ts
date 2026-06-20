@@ -1,7 +1,7 @@
 export const sampleStory = [
-  "The library hummed quietly as Aurora adjusted her glasses and began to read.",
-  "Each page carried a new discovery, yet some words lingered like distant constellations.",
-  "She paused, tracing sentences with a thoughtful gaze, returning to lines that felt dense.",
-  "With patience, the story unfolded and the unfamiliar terms slowly found their meaning.",
-  "By the final paragraph, the room felt brighter, as if comprehension itself lit the air."
+  "The library hummed quietly as Aurora adjusted her current glasses to read.", // 12
+  "Each page carried a new discovery, yet words lingered like distant constellations.", // 12
+  "She paused, tracing sentences with a thoughtful gaze, returning to dense lines.", // 12
+  "With patience, the story unfolded and unfamiliar terms slowly found their meaning.", // 12
+  "By the final paragraph, the room felt brighter, as comprehension itself lit." // 12
 ];

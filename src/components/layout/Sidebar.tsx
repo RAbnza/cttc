@@ -32,8 +32,10 @@ export const Sidebar = () => (
       ))}
     </nav>
     <div className="mt-auto rounded-xl border border-ink-100 bg-white/80 p-4 text-sm text-ink-600">
-      <p className="font-semibold text-ink-800">Next calibration</p>
-      <p className="mt-1 text-xs">Suggested after 3 sessions</p>
+      <p className="font-semibold text-ink-800">Gaze calibration</p>
+      <p className="mt-1 text-xs">
+        Calibrate once before your first reading session. Recalibrate anytime if tracking feels off.
+      </p>
     </div>
   </aside>
 );

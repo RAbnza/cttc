@@ -1,98 +1,130 @@
-import { motion } from "framer-motion";
-
-import { AnalyticsPanel } from "./components/analytics/AnalyticsPanel";
-import { GazeStream } from "./components/analytics/GazeStream";
-import { ReadingRhythm } from "./components/analytics/ReadingRhythm";
-import { SessionStats } from "./components/analytics/SessionStats";
-import { AppShell } from "./components/layout/AppShell";
-import { Sidebar } from "./components/layout/Sidebar";
-import { Topbar } from "./components/layout/Topbar";
-import { ConfusionList } from "./components/reader/ConfusionList";
-import { CalibrationOverlay } from "./components/reader/CalibrationOverlay";
+import { CameraWarningBanner } from "./components/reader/CameraWarningBanner";
+import { FixationMetric } from "./components/reader/FixationMetric";
+import { LatestSessionRereadList } from "./components/reader/LatestSessionRereadList";
+import { LatestSessionWordList } from "./components/reader/LatestSessionWordList";
 import { ReaderPanel } from "./components/reader/ReaderPanel";
-import { ReadingStatusCard } from "./components/reader/ReadingStatusCard";
 import { WebcamPanel } from "./components/reader/WebcamPanel";
 import { VocabPanel } from "./components/vocab/VocabPanel";
+import { AppShell } from "./components/layout/AppShell";
+import { Topbar } from "./components/layout/Topbar";
+import { CalibrationOverlay } from "./components/reader/CalibrationOverlay";
+import { TrackingOverlay } from "./components/reader/TrackingOverlay";
 import { ReadingProvider, useReadingContext } from "./store/readingStore";
 
 const Dashboard = () => {
-  const { session, gazeStatus, storyLines, vocabEntries, actions, setWordRects } =
-    useReadingContext();
-  const rhythm = session.wordMetrics.slice(-8).map((metric) =>
-    Math.min(100, Math.round(metric.fixationMs / 8))
-  );
+  const {
+    session,
+    latestSession,
+    gazeStatus,
+    cameraEnabled,
+    cameraReady,
+    vocabEntries,
+    setCameraEnabled,
+    actions
+  } = useReadingContext();
+
+  const webcamActive =
+    cameraEnabled &&
+    (session.status === "idle" ||
+      session.status === "complete" ||
+      session.status === "paused");
+
+  const fixationSource = session.status !== "idle" ? session : latestSession;
 
   return (
     <AppShell>
-      <div className="mx-auto grid max-w-6xl gap-6 px-6 py-8 lg:grid-cols-[240px_1fr]">
-        <Sidebar />
-        <div className="flex flex-col gap-6">
-          <Topbar
-            sessionStatus={session.status}
+      <div className="mx-auto max-w-6xl px-5 py-6 sm:px-6">
+        <Topbar
+          sessionStatus={session.status}
+          gazeStatus={gazeStatus}
+          calibrationQuality={session.calibration.qualityScore}
+          cameraEnabled={cameraEnabled}
+          isCalibrated={session.calibration.completed}
+        />
+
+        <div className="mt-5 space-y-5">
+          <CameraWarningBanner
+            cameraEnabled={cameraEnabled}
             gazeStatus={gazeStatus}
-            calibrationQuality={session.calibration.qualityScore}
           />
-          <motion.div
-            className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]"
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            <div className="flex flex-col gap-6">
+
+          <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_288px]">
+            <div className="flex flex-col gap-5">
               <ReaderPanel
                 session={session}
-                lines={storyLines}
-                onWordLayout={setWordRects}
-                onStart={actions.startSession}
+                cameraEnabled={cameraEnabled}
+                cameraReady={cameraReady}
+                onStartCalibration={actions.startCalibration}
+                onStartReading={actions.startReadingSession}
                 onRestartCalibration={actions.restartCalibration}
                 onPause={actions.pauseSession}
                 onResume={actions.resumeSession}
               />
+              <div className="grid gap-5 2xl:grid-cols-2">
+                <LatestSessionWordList session={fixationSource} />
+                <LatestSessionRereadList session={fixationSource} />
+              </div>
               <VocabPanel entries={vocabEntries} />
             </div>
-            <div className="flex flex-col gap-6">
-              <AnalyticsPanel
-                analytics={session.analytics}
-                progressPercent={session.progressPercent}
-              />
+
+            <div className="flex flex-col gap-5">
               <WebcamPanel
-                enabled={session.status === "tracking" || session.status === "calibrating"}
+                active={webcamActive}
+                cameraEnabled={cameraEnabled}
+                gazeStatus={gazeStatus}
+                onCameraEnabledChange={setCameraEnabled}
               />
-              <SessionStats session={session} />
-              <ReadingStatusCard status={session.status} />
-              <ConfusionList words={session.difficultWords} />
+              <FixationMetric
+                averageFixationMs={fixationSource?.analytics.averageFixationMs ?? 0}
+                wordsRead={fixationSource?.analytics.wordsRead ?? 0}
+                totalWords={fixationSource?.analytics.totalWords ?? 0}
+                totalTimeMs={fixationSource?.analytics.totalTimeMs ?? 0}
+                difficultCount={fixationSource?.analytics.difficultCount ?? 0}
+                rereadCount={fixationSource?.analytics.rereadCount ?? 0}
+              />
             </div>
-          </motion.div>
-          <motion.div
-            className="grid gap-6 lg:grid-cols-3"
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-          >
-            <GazeStream points={session.gazePoints} />
-            <div className="lg:col-span-2">
-              <ReadingRhythm values={rhythm.length ? rhythm : [20, 40, 55, 30, 60]} />
-            </div>
-          </motion.div>
+          </div>
         </div>
       </div>
-      {session.status === "calibrating" && (
-        <CalibrationOverlay
-          calibration={session.calibration}
-          gazeStatus={gazeStatus}
-          onCapture={actions.captureCalibrationSample}
-        />
-      )}
     </AppShell>
   );
 };
 
 function App() {
+  const { session, gazeStatus, gazePoint, actions, storyLines, setWordRects } =
+    useReadingContext();
+
+  if (session.status === "calibrating") {
+    return (
+      <CalibrationOverlay
+        calibration={session.calibration}
+        gazeStatus={gazeStatus}
+        onCapture={actions.captureCalibrationSample}
+      />
+    );
+  }
+
+  if (session.status === "tracking") {
+    return (
+      <TrackingOverlay
+        session={session}
+        lines={storyLines}
+        gazePoint={gazePoint}
+        onWordLayout={setWordRects}
+        onHighlightWord={actions.trackHighlightedWord}
+        onPause={actions.pauseSession}
+        onFinish={actions.stopSession}
+      />
+    );
+  }
+
+  return <Dashboard />;
+}
+
+export default function AppWrapper() {
   return (
     <ReadingProvider>
-      <Dashboard />
+      <App />
     </ReadingProvider>
   );
 }
-
-export default App;

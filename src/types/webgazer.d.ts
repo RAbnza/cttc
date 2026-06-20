@@ -29,6 +29,7 @@ declare global {
       setGazeListener: (
         listener: (data: { x: number; y: number } | null) => void
       ) => void;
+      recordScreenPosition?: (x: number, y: number, eventType?: number) => unknown;
     };
   }
 }

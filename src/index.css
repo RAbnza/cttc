@@ -17,9 +17,7 @@ body {
 }
 
 .app-shell {
-  background: radial-gradient(circle at top left, rgba(103, 203, 180, 0.25), transparent 45%),
-    radial-gradient(circle at 20% 20%, rgba(178, 215, 255, 0.35), transparent 35%),
-    linear-gradient(140deg, #f4f6f8 0%, #f9fbfc 45%, #edf3f4 100%);
+  background: #f3f5f7;
 }
 
 .glass-panel {

@@ -24,28 +24,44 @@ export type WordMetrics = WordLocation & {
 
 export type ReadingAnalytics = {
   totalTimeMs: number;
+  totalWords: number;
   wordsRead: number;
   averageFixationMs: number;
   rereadCount: number;
   difficultCount: number;
 };
 
+export type CalibrationPhase = "grid" | "words";
+
 export type CalibrationTarget = {
   x: number;
   y: number;
 };
 
+export type WordCalibrationTarget = {
+  term: string;
+  row: number;
+  col: number;
+};
+
 export type CalibrationState = {
+  phase: CalibrationPhase;
   currentIndex: number;
   totalTargets: number;
+  gridTotalTargets: number;
+  wordTotalTargets: number;
   qualityScore: number;
+  gridQualityScore: number;
+  wordQualityScore: number;
   completed: boolean;
   target: CalibrationTarget;
+  currentWord: WordCalibrationTarget | null;
 };
 
 export type ReadingSession = {
   id: string;
   startedAt: number;
+  endedAt?: number;
   status: ReadingStatus;
   progressPercent: number;
   calibration: CalibrationState;

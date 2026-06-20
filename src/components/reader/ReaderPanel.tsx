@@ -1,26 +1,35 @@
-import { Eye, PauseCircle, PlayCircle } from "lucide-react";
+import { Camera, CheckCircle2, Circle, PauseCircle, PlayCircle, Target } from "lucide-react";
 
 import type { ReadingSession } from "../../types/reading";
-import type { WordRect } from "../../types/reading";
+import { cn } from "../../utils/cn";
 import { Button } from "../ui/Button";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/Card";
-import { StoryText } from "./StoryText";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/Card";
 
 type ReaderPanelProps = {
   session: ReadingSession;
-  lines: string[];
-  onWordLayout?: (rects: WordRect[]) => void;
-  onStart: () => void;
+  cameraEnabled: boolean;
+  cameraReady: boolean;
+  onStartCalibration: () => void;
+  onStartReading: () => void;
   onRestartCalibration: () => void;
   onPause: () => void;
   onResume: () => void;
 };
 
+const statusLabel: Record<ReadingSession["status"], string> = {
+  idle: "Ready",
+  calibrating: "Calibrating",
+  tracking: "Reading",
+  paused: "Paused",
+  complete: "Complete"
+};
+
 export const ReaderPanel = ({
   session,
-  lines,
-  onWordLayout,
-  onStart,
+  cameraEnabled,
+  cameraReady,
+  onStartCalibration,
+  onStartReading,
   onRestartCalibration,
   onPause,
   onResume
@@ -28,67 +37,175 @@ export const ReaderPanel = ({
   const isTracking = session.status === "tracking";
   const isCalibrating = session.status === "calibrating";
   const isIdle = session.status === "idle" || session.status === "complete";
+  const isCalibrated = session.calibration.completed;
+  const sessionBlocked = !cameraEnabled || !cameraReady;
+
+  const steps = [
+    {
+      label: "Camera",
+      done: cameraEnabled && cameraReady,
+      active: !cameraReady
+    },
+    {
+      label: "Calibrate",
+      done: isCalibrated,
+      active: cameraReady && !isCalibrated
+    },
+    {
+      label: "Read",
+      done: session.status === "complete",
+      active: isCalibrated && isIdle
+    }
+  ];
 
   return (
-    <Card>
-      <CardHeader>
+    <Card className="p-0">
+      <CardHeader className="border-b border-ink-100 px-6 py-5">
         <div>
-          <CardTitle>Story Focus</CardTitle>
-          <p className="mt-1 text-sm text-ink-500">
-            Live gaze mapping highlights the current word.
-          </p>
+          <CardTitle>Reading Session</CardTitle>
+          <CardDescription>
+            Calibrate gaze tracking, then read the story in full screen.
+          </CardDescription>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <span
+          className={cn(
+            "rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide",
+            isTracking && "bg-mint-100 text-mint-700",
+            isCalibrating && "bg-amber-100 text-amber-800",
+            isIdle && "bg-ink-100 text-ink-600",
+            session.status === "paused" && "bg-ink-200 text-ink-700",
+            session.status === "complete" && "bg-ink-800 text-white"
+          )}
+        >
+          {statusLabel[session.status]}
+        </span>
+      </CardHeader>
+
+      <CardContent className="mt-0 space-y-6 px-6 py-5">
+        <ol className="grid grid-cols-3 gap-3">
+          {steps.map((step) => (
+            <li
+              key={step.label}
+              className={cn(
+                "rounded-xl border px-3 py-3 text-center",
+                step.done && "border-mint-200 bg-mint-50",
+                step.active && !step.done && "border-ink-300 bg-white",
+                !step.done && !step.active && "border-ink-100 bg-ink-50/60"
+              )}
+            >
+              <div className="mb-1 flex justify-center">
+                {step.done ? (
+                  <CheckCircle2 size={18} className="text-mint-700" />
+                ) : (
+                  <Circle
+                    size={18}
+                    className={step.active ? "text-ink-700" : "text-ink-300"}
+                  />
+                )}
+              </div>
+              <p className="text-xs font-semibold text-ink-800">{step.label}</p>
+            </li>
+          ))}
+        </ol>
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="rounded-xl border border-ink-100 bg-ink-50/50 px-4 py-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-ink-400">
+              Calibration
+            </p>
+            <p className="mt-1 text-sm font-medium text-ink-900">
+              {isCalibrated
+                ? `${session.calibration.qualityScore}% overall`
+                : "Not completed"}
+            </p>
+            {isCalibrated && (
+              <p className="mt-0.5 text-xs text-ink-500">
+                Grid {session.calibration.gridQualityScore}% · Words{" "}
+                {session.calibration.wordQualityScore}%
+              </p>
+            )}
+          </div>
+          <div className="rounded-xl border border-ink-100 bg-ink-50/50 px-4 py-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-ink-400">
+              Current word
+            </p>
+            <p className="mt-1 truncate text-sm font-medium text-ink-900">
+              {session.currentWord?.term || "—"}
+            </p>
+            {session.progressPercent > 0 && (
+              <p className="mt-0.5 text-xs text-ink-500">
+                {session.progressPercent}% through story
+              </p>
+            )}
+          </div>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
           {isIdle ? (
-            <Button size="sm" onClick={onStart}>
-              <PlayCircle size={16} /> Start calibration
-            </Button>
+            <>
+              <Button
+                variant="outline"
+                onClick={onStartCalibration}
+                disabled={sessionBlocked}
+                title={
+                  sessionBlocked
+                    ? "Enable and connect the camera first"
+                    : undefined
+                }
+              >
+                <Target size={16} /> Calibrate
+              </Button>
+              <Button
+                onClick={onStartReading}
+                disabled={sessionBlocked || !isCalibrated}
+                title={
+                  !cameraEnabled
+                    ? "Turn on the camera first"
+                    : !cameraReady
+                      ? "Waiting for camera"
+                      : !isCalibrated
+                        ? "Complete calibration first"
+                        : undefined
+                }
+              >
+                <PlayCircle size={16} /> Start Reading
+              </Button>
+            </>
           ) : isCalibrating ? (
-            <Button size="sm" variant="outline" disabled>
-              <PlayCircle size={16} /> Calibrating
+            <Button variant="outline" disabled>
+              <Target size={16} /> Calibrating…
             </Button>
           ) : isTracking ? (
             <>
-              <Button size="sm" variant="outline" onClick={onPause}>
+              <Button variant="outline" onClick={onPause}>
                 <PauseCircle size={16} /> Pause
               </Button>
-              <Button size="sm" variant="ghost" onClick={onRestartCalibration}>
-                <PlayCircle size={16} /> Restart calibration
+              <Button variant="ghost" onClick={onRestartCalibration}>
+                <Target size={16} /> Recalibrate
               </Button>
             </>
           ) : (
             <>
-              <Button size="sm" onClick={onResume}>
+              <Button onClick={onResume}>
                 <PlayCircle size={16} /> Resume
               </Button>
-              <Button size="sm" variant="ghost" onClick={onRestartCalibration}>
-                <PlayCircle size={16} /> Start calibration
+              <Button variant="ghost" onClick={onRestartCalibration}>
+                <Target size={16} /> Recalibrate
               </Button>
             </>
           )}
         </div>
-      </CardHeader>
-      <CardContent>
-        <div className="mb-6 flex items-center gap-3 rounded-xl border border-ink-100 bg-white/80 px-4 py-3 text-base text-ink-600">
-          <Eye size={20} className="shrink-0 text-ink-500" />
-          Current word:{" "}
-          <span className="font-semibold text-ink-900">
-            {session.currentWord?.term || "--"}
-          </span>
-        </div>
-        <div
-          className="overflow-y-auto overscroll-y-contain rounded-2xl border border-ink-100 bg-white/90 px-3 py-5 shadow-inner sm:px-5 [--story-line:2.35rem] md:[--story-line:2.65rem]"
-          style={{
-            maxHeight:
-              "min(65vh, calc(5 * var(--story-line) + 4 * 1.1rem + 2.25rem))"
-          }}
-        >
-          <StoryText
-            lines={lines}
-            currentWord={session.currentWord}
-            onLayout={onWordLayout}
-          />
-        </div>
+
+        {sessionBlocked && isIdle && (
+          <div className="flex items-start gap-2 rounded-xl border border-ink-200 bg-white px-4 py-3 text-sm text-ink-600">
+            <Camera size={16} className="mt-0.5 shrink-0 text-ink-400" />
+            <p>
+              {!cameraEnabled
+                ? "Camera is off. Turn it on in the webcam panel before calibrating or reading."
+                : "Camera is starting up. Actions unlock once the feed is live."}
+            </p>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
